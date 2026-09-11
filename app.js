@@ -207,6 +207,7 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portafolio Profesional - ${name}</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNGY0NmU1Ii8+PHBhdGggZD0iTTMwIDQwSDcwVjYwSDMwVjQwWiBNNDAgNDBWNDVBNDAgMCAwIDEgNjAgNDVWNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjZTBmZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" type="image/svg+xml">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
