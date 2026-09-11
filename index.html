@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Portafolio Profesional</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- PANTALLA DE LOGIN -->
+    <section id="login-screen" class="card">
+      <h1>Portafolio Profesional Privado</h1>
+      <p>Crea tu expediente o portafolio de trabajo. Ideal para todas las profesiones (Administración, Tecnología, Finanzas, Salud, etc.).</p>
+      <div id="g_id_onload"
+           data-client_id="TU_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse">
+      </div>
+      <div class="g_id_signin" data-type="standard"></div>
+    </section>
+
+    <!-- FORMULARIO PRINCIPAL DE EDICIÓN -->
+    <section id="app-screen" class="card hidden">
+      <header class="user-header">
+        <img id="user-avatar" src="" alt="Avatar" class="avatar">
+        <div>
+          <h2 id="user-name"></h2>
+          <p id="user-email"></p>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="config-btn" class="icon-btn" onclick="toggleConfigModal()" title="Configuración y Estilo">⚙️</button>
+          <button id="logout-btn" type="button" onclick="logout()">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <!-- MODAL DE CONFIGURACIÓN -->
+      <div id="config-modal" class="config-modal hidden">
+        <div class="modal-content">
+          <h3>Personalización del Portafolio</h3>
+          <label for="theme-select">Paleta de colores:</label>
+          <select id="theme-select" onchange="applyTheme(this.value)">
+            <option value="indigo">Azul Indigo (Corporativo)</option>
+            <option value="dark">Modo Oscuro (Elegante)</option>
+            <option value="emerald">Verde Esmeralda (Moderno)</option>
+            <option value="warm">Marrón & Cálido (Creativo)</option>
+          </select>
+          <button type="button" class="btn-secondary" onclick="toggleConfigModal()" style="margin-bottom:0; margin-top:8px;">Listo</button>
+        </div>
+      </div>
+
+      <form id="portfolio-form" onsubmit="saveAndGenerate(event)">
+        <!-- DATOS PERSONALES -->
+        <h3>Perfil Profesional</h3>
+        <label for="prof-name">Nombre Completo:</label>
+        <input type="text" id="prof-name" placeholder="Ej. Carlos Mendoza" required>
+
+        <label for="prof-title">Título / Profesión o Cargo:</label>
+        <input type="text" id="prof-title" placeholder="Ej. Especialista en Administración Tributaria / Contador Público" required>
+
+        <label for="prof-about">Resumen Ejecutivo / Biografía:</label>
+        <textarea id="prof-about" placeholder="Describe tu experiencia profesional, enfoque de trabajo y áreas en las que destacas..." rows="4" required></textarea>
+
+        <label for="prof-skills">Habilidades, Competencias y Herramientas (separadas por coma):</label>
+        <input type="text" id="prof-skills" placeholder="Ej. Normativa Fiscal, Auditoría, Excel Avanzado, ERP SAP, Gestión de Riesgos">
+
+        <!-- EXPERIENCIA / TRABAJOS / CASOS DE ÉXITO -->
+        <h3>Experiencia, Proyectos o Casos de Éxito</h3>
+        <p class="section-desc">Agrega ejemplos de auditorías, gestiones relevantes, casos de estudio, proyectos o trabajos que hayas realizado.</p>
+        
+        <div id="projects-list"></div>
+        <button type="button" class="btn-secondary" onclick="addProjectInput()">+ Agregar Caso o Trabajo</button>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Guardar y Descargar Portafolio HTML</button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
