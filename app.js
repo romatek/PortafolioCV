@@ -38,26 +38,30 @@ function parseJwt(token) {
 }
 
 function handleCredentialResponse(response) {
-  const user = parseJwt(response.credential);
+  const googleUser = parseJwt(response.credential);
   const userData = {
     id: "currentUser",
-    name: user.name,
-    email: user.email,
-    picture: user.picture
+    name: googleUser.name,
+    email: googleUser.email,
+    picture: googleUser.picture
   };
 
   saveToIndexedDB("userData", userData, () => {
     showApp(userData);
-    loadPortfolioData();
+    
+    // Sincronizar automáticamente con el campo de nombre del perfil si está vacío
+    const profNameInput = document.getElementById("prof-name");
+    if (profNameInput && !profNameInput.value) {
+      profNameInput.value = googleUser.name;
+    }
   });
 }
 
 function checkExistingUser() {
   getFromIndexedDB("userData", "currentUser", (user) => {
-    if (user) {
+    if (user && user.email) {
       showApp(user);
     } else {
-      // Si no hay sesión iniciada previamente, mantenemos la pantalla de login limpia
       document.getElementById("login-screen").classList.remove("hidden");
       document.getElementById("app-screen").classList.add("hidden");
     }
@@ -68,6 +72,8 @@ function checkExistingUser() {
 function showApp(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app-screen").classList.remove("hidden");
+  
+  // Asignar correctamente la foto, el nombre y el correo debajo
   document.getElementById("user-avatar").src = user.picture || "https://via.placeholder.com/50";
   document.getElementById("user-name").innerText = user.name || "Usuario";
   document.getElementById("user-email").innerText = user.email || "";
