@@ -4,7 +4,9 @@ const request = indexedDB.open("LocalPortfolioDB", 1);
 
 request.onupgradeneeded = (e) => {
   db = e.target.result;
-  db.createObjectStore("userData", { keyPath: "id" });
+  if (!db.objectStoreNames.contains("userData")) {
+    db.createObjectStore("userData", { keyPath: "id" });
+  }
 };
 
 request.onsuccess = (e) => {
@@ -46,6 +48,7 @@ function handleCredentialResponse(response) {
 
   saveToIndexedDB("userData", userData, () => {
     showApp(userData);
+    loadPortfolioData();
   });
 }
 
@@ -54,7 +57,9 @@ function checkExistingUser() {
     if (user) {
       showApp(user);
     } else {
-      showApp({ name: "Usuario Demo", email: "demo@correo.com", picture: "https://via.placeholder.com/50" });
+      // Si no hay sesión iniciada previamente, mantenemos la pantalla de login limpia
+      document.getElementById("login-screen").classList.remove("hidden");
+      document.getElementById("app-screen").classList.add("hidden");
     }
     loadPortfolioData();
   });
@@ -64,11 +69,12 @@ function showApp(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app-screen").classList.remove("hidden");
   document.getElementById("user-avatar").src = user.picture || "https://via.placeholder.com/50";
-  document.getElementById("user-name").innerText = user.name || "Usuario Demo";
-  document.getElementById("user-email").innerText = user.email || "demo@correo.com";
+  document.getElementById("user-name").innerText = user.name || "Usuario";
+  document.getElementById("user-email").innerText = user.email || "";
   
-  if (!document.getElementById("prof-name").value) {
-    document.getElementById("prof-name").value = user.name || "";
+  const profNameInput = document.getElementById("prof-name");
+  if (profNameInput && !profNameInput.value) {
+    profNameInput.value = user.name || "";
   }
 }
 
@@ -207,7 +213,7 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portafolio Profesional - ${name}</title>
-  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNGY0NmU1Ii8+PHBhdGggZD0iTTMwIDQwSDcwVjYwSDMwVjQwWiBNNDAgNDBWNDVBNDAgMCAwIDEgNjAgNDVWNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjZTBmZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" type="image/svg+xml">
+  <link rel="icon" href="icono.valija}.jpg" type="image/jpeg">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
