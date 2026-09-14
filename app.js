@@ -49,7 +49,6 @@ function handleCredentialResponse(response) {
   saveToIndexedDB("userData", userData, () => {
     showApp(userData);
     
-    // Sincronizar automáticamente con el campo de nombre del perfil si está vacío
     const profNameInput = document.getElementById("prof-name");
     if (profNameInput && !profNameInput.value) {
       profNameInput.value = googleUser.name;
@@ -73,7 +72,6 @@ function showApp(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app-screen").classList.remove("hidden");
   
-  // Asignar correctamente la foto, el nombre y el correo debajo
   document.getElementById("user-avatar").src = user.picture || "https://via.placeholder.com/50";
   document.getElementById("user-name").innerText = user.name || "Usuario";
   document.getElementById("user-email").innerText = user.email || "";
@@ -114,7 +112,7 @@ function deleteFromIndexedDB(storeName, key, callback) {
 }
 
 // --- TRABAJOS, CASOS DE ÉXITO O PROYECTOS ---
-function addProjectInput(title = "", description = "", link = "", image = "") {
+function addProjectInput(title = "", description = "", link = "", linkText = "", image = "") {
   const container = document.getElementById("projects-list");
   const div = document.createElement("div");
   div.className = "project-item";
@@ -133,8 +131,11 @@ function addProjectInput(title = "", description = "", link = "", image = "") {
     
     <label>Enlace Adjunto o Informe (Opcional):</label>
     <input type="url" class="proj-link" placeholder="Ej. https://enlace-a-documento.com" value="${link}">
+
+    <label>Texto del Botón del Enlace (Opcional):</label>
+    <input type="text" class="proj-link-text" placeholder="Ej. Ver Informe Completo" value="${linkText}">
     
-    <button type="button" style="background:#fee2e2;color:#dc2626;" onclick="this.parentElement.remove()">Eliminar Entrada</button>
+    <button type="button" style="background:#fee2e2;color:#dc2626; margin-top: 8px;" onclick="this.parentElement.remove()">Eliminar Entrada</button>
   `;
   container.appendChild(div);
 }
@@ -168,6 +169,7 @@ function saveAndGenerate(event) {
     title: el.querySelector(".proj-title").value,
     description: el.querySelector(".proj-desc").value,
     link: el.querySelector(".proj-link").value,
+    linkText: el.querySelector(".proj-link-text").value,
     image: el.querySelector(".proj-img-base64").value
   }));
 
@@ -191,7 +193,7 @@ function loadPortfolioData() {
     }
     if (data.projects) {
       document.getElementById("projects-list").innerHTML = "";
-      data.projects.forEach(p => addProjectInput(p.title, p.description, p.link, p.image));
+      data.projects.forEach(p => addProjectInput(p.title, p.description, p.link, p.linkText || "", p.image));
     }
   });
 }
@@ -206,10 +208,10 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
 
   const projectsHTML = projects.map(p => `
     <div class="card">
-      ${p.image ? `<img src="${p.image}" class="proj-img" alt="${p.title}">` : ''}
+      ${p.image ? `<div class="proj-img-container"><img src="${p.image}" class="proj-img" alt="${p.title}"></div>` : ''}
       <h3>${p.title}</h3>
       <p class="proj-desc">${p.description}</p>
-      ${p.link ? `<a href="${p.link}" target="_blank" class="proj-link">Ver Documento / Enlace &rarr;</a>` : ''}
+      ${p.link ? `<a href="${p.link}" target="_blank" class="proj-link-btn">${p.linkText ? p.linkText : 'Ver Enlace'} &rarr;</a>` : ''}
     </div>
   `).join('');
 
@@ -223,20 +225,66 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-    body { background-color: ${t.bg}; color: ${t.text}; padding: 60px 20px; max-width: 720px; margin: 0 auto; line-height: 1.6; }
-    .header { margin-bottom: 40px; }
+    body { background-color: ${t.bg}; color: ${t.text}; padding: 40px 20px; max-width: 1000px; margin: 0 auto; line-height: 1.6; }
+    .header { margin-bottom: 40px; text-align: center; }
     h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
     .title { color: ${t.primary}; font-weight: 600; font-size: 1.2rem; margin-bottom: 20px; }
-    .about { color: ${t.muted}; font-size: 1.05rem; white-space: pre-line; margin-bottom: 24px; }
-    .skills-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .about { color: ${t.muted}; font-size: 1.05rem; white-space: pre-line; margin-bottom: 24px; max-width: 700px; margin-left: auto; margin-right: auto; }
+    .skills-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 32px; }
     .skill-tag { background: ${t.tagBg}; color: ${t.tagText}; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    
     h2 { font-size: 1.4rem; font-weight: 600; margin-bottom: 24px; border-bottom: 2px solid ${t.border}; padding-bottom: 8px; }
-    .card { background: ${t.card}; padding: 24px; border-radius: 12px; border: 1px solid ${t.border}; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-    .proj-img { width: 100%; height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 16px; border: 1px solid ${t.border}; }
+    
+    /* GRID DE CARDS */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .card { background: ${t.card}; padding: 24px; border-radius: 12px; border: 1px solid ${t.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; }
+    
+    /* IMAGEN ADAPTATIVA (SIN RECORTES FORZADOS) */
+    .proj-img-container {
+      width: 100%;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 280px;
+      border: 1px solid ${t.border};
+    }
+    .proj-img {
+      width: 100%;
+      height: auto;
+      max-height: 280px;
+      object-fit: contain;
+      display: block;
+    }
+
     .card h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; color: ${t.text}; }
-    .proj-desc { color: ${t.muted}; font-size: 0.95rem; white-space: pre-line; margin-bottom: 16px; }
-    .proj-link { color: ${t.primary}; text-decoration: none; font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; }
-    .proj-link:hover { text-decoration: underline; }
+    .proj-desc { color: ${t.muted}; font-size: 0.95rem; white-space: pre-line; margin-bottom: 16px; flex-grow: 1; }
+    
+    /* BOTÓN ESTILIZADO PARA EL ENLACE */
+    .proj-link-btn {
+      display: inline-block;
+      background-color: ${t.primary};
+      color: #ffffff;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 10px 16px;
+      border-radius: 8px;
+      transition: opacity 0.2s;
+      margin-top: auto;
+    }
+    .proj-link-btn:hover {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -247,7 +295,9 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
     ${skillsHTML ? `<div class="skills-container">${skillsHTML}</div>` : ''}
   </div>
   <h2>Experiencia, Trabajos y Casos de Éxito</h2>
-  ${projectsHTML}
+  <div class="projects-grid">
+    ${projectsHTML}
+  </div>
 </body>
 </html>`;
 
