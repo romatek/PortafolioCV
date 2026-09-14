@@ -28,6 +28,7 @@ function toggleConfigModal() {
 
 function applyTheme(themeName) {
   document.body.setAttribute("data-theme", themeName);
+  updatePreview();
 }
 
 // --- AUTENTICACIÓN GOOGLE ---
@@ -53,6 +54,7 @@ function handleCredentialResponse(response) {
     if (profNameInput && !profNameInput.value) {
       profNameInput.value = googleUser.name;
     }
+    updatePreview();
   });
 }
 
@@ -63,6 +65,7 @@ function checkExistingUser() {
     } else {
       document.getElementById("login-screen").classList.remove("hidden");
       document.getElementById("app-screen").classList.add("hidden");
+      document.getElementById("preview-section").classList.add("hidden");
     }
     loadPortfolioData();
   });
@@ -71,6 +74,7 @@ function checkExistingUser() {
 function showApp(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app-screen").classList.remove("hidden");
+  document.getElementById("preview-section").classList.remove("hidden");
   
   document.getElementById("user-avatar").src = user.picture || "https://via.placeholder.com/50";
   document.getElementById("user-name").innerText = user.name || "Usuario";
@@ -80,6 +84,7 @@ function showApp(user) {
   if (profNameInput && !profNameInput.value) {
     profNameInput.value = user.name || "";
   }
+  updatePreview();
 }
 
 function logout() {
@@ -111,6 +116,54 @@ function deleteFromIndexedDB(storeName, key, callback) {
   tx.oncomplete = callback;
 }
 
+// --- VISTA PREVIA EN VIVO ---
+function updatePreview() {
+  const name = document.getElementById("prof-name").value || "Tu Nombre";
+  const title = document.getElementById("prof-title").value || "Tu Título Profesional";
+  const about = document.getElementById("prof-about").value || "Aquí aparecerá tu resumen ejecutivo y biografía...";
+  const skills = document.getElementById("prof-skills").value;
+  const themeKey = document.getElementById("theme-select").value || "indigo";
+  const t = themes[themeKey] || themes.indigo;
+
+  const skillsHTML = skills ? skills.split(',')
+    .map(s => `<span class="prev-tag" style="background:${t.tagBg}; color:${t.tagText}; border:1px solid ${t.border};">${s.trim()}</span>`)
+    .join('') : '<span class="prev-tag" style="opacity:0.5;">Habilidad 1, Habilidad 2</span>';
+
+  const projectElements = document.querySelectorAll(".project-item");
+  const projects = Array.from(projectElements).map(el => ({
+    title: el.querySelector(".proj-title").value || "Título del proyecto",
+    description: el.querySelector(".proj-desc").value || "Descripción del trabajo realizado...",
+    link: el.querySelector(".proj-link").value,
+    linkText: el.querySelector(".proj-link-text").value || "Ver Enlace",
+    image: el.querySelector(".proj-img-base64").value
+  }));
+
+  const projectsHTML = projects.length > 0 ? projects.map(p => `
+    <div class="prev-proj-card" style="background:${t.card}; border-color: ${t.border};">
+      ${p.image ? `<div class="prev-proj-img-container" style="border-color:${t.border};"><img src="${p.image}" class="prev-proj-img"></div>` : ''}
+      <h4 style="color: ${t.text};">${p.title}</h4>
+      <p style="color: ${t.muted};">${p.description}</p>
+      ${p.link ? `<a href="${p.link}" target="_blank" class="prev-link-btn" style="background:${t.primary};">${p.linkText} &rarr;</a>` : ''}
+    </div>
+  `).join('') : '<p style="font-size:0.85rem; color:var(--text-muted); text-align:center; grid-column: 1/-1;">Agrega proyectos abajo para verlos aquí en tiempo real.</p>';
+
+  const previewContainer = document.getElementById("preview-content");
+  if (previewContainer) {
+    previewContainer.innerHTML = `
+      <div class="prev-header">
+        <h1 style="color: ${t.text};">${name}</h1>
+        <div class="prev-title" style="color: ${t.primary};">${title}</div>
+        <p class="prev-about" style="color: ${t.muted};">${about}</p>
+        <div class="prev-skills">${skillsHTML}</div>
+      </div>
+      <h3 style="border-color: ${t.border}; color: ${t.primary}; font-size: 1rem; margin-bottom: 14px;">Experiencia y Casos de Éxito</h3>
+      <div class="prev-grid">
+        ${projectsHTML}
+      </div>
+    `;
+  }
+}
+
 // --- TRABAJOS, CASOS DE ÉXITO O PROYECTOS ---
 function addProjectInput(title = "", description = "", link = "", linkText = "", image = "") {
   const container = document.getElementById("projects-list");
@@ -124,20 +177,21 @@ function addProjectInput(title = "", description = "", link = "", linkText = "",
     <img class="proj-preview" src="${image}" style="${image ? 'display:block;' : ''}">
     
     <label>Título del Caso, Proyecto o Experiencia:</label>
-    <input type="text" class="proj-title" placeholder="Ej. Reestructuración de Pasivos Fiscales 2025" value="${title}" required>
+    <input type="text" class="proj-title" placeholder="Ej. Reestructuración de Pasivos Fiscales 2025" value="${title}" oninput="updatePreview()" required>
     
     <label>Explicación / Detalle de la Gestión:</label>
-    <textarea class="proj-desc" placeholder="Describe qué problema resolviste, las acciones tomadas y los resultados obtenidos..." rows="3" required>${description}</textarea>
+    <textarea class="proj-desc" placeholder="Describe qué problema resolviste, las acciones tomadas y los resultados obtenidos..." rows="3" oninput="updatePreview()" required>${description}</textarea>
     
     <label>Enlace Adjunto o Informe (Opcional):</label>
-    <input type="url" class="proj-link" placeholder="Ej. https://enlace-a-documento.com" value="${link}">
+    <input type="url" class="proj-link" placeholder="Ej. https://enlace-a-documento.com" value="${link}" oninput="updatePreview()">
 
     <label>Texto del Botón del Enlace (Opcional):</label>
-    <input type="text" class="proj-link-text" placeholder="Ej. Ver Informe Completo" value="${linkText}">
+    <input type="text" class="proj-link-text" placeholder="Ej. Ver Informe Completo" value="${linkText}" oninput="updatePreview()">
     
-    <button type="button" style="background:#fee2e2;color:#dc2626; margin-top: 8px;" onclick="this.parentElement.remove()">Eliminar Entrada</button>
+    <button type="button" style="background:#fee2e2;color:#dc2626; margin-top: 8px;" onclick="this.parentElement.remove(); updatePreview();">Eliminar Entrada</button>
   `;
   container.appendChild(div);
+  updatePreview();
 }
 
 function previewImage(input) {
@@ -150,6 +204,7 @@ function previewImage(input) {
       const img = container.querySelector(".proj-preview");
       img.src = e.target.result;
       img.style.display = "block";
+      updatePreview();
     };
     reader.readAsDataURL(file);
   }
@@ -195,6 +250,7 @@ function loadPortfolioData() {
       document.getElementById("projects-list").innerHTML = "";
       data.projects.forEach(p => addProjectInput(p.title, p.description, p.link, p.linkText || "", p.image));
     }
+    updatePreview();
   });
 }
 
@@ -235,7 +291,6 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
     
     h2 { font-size: 1.4rem; font-weight: 600; margin-bottom: 24px; border-bottom: 2px solid ${t.border}; padding-bottom: 8px; }
     
-    /* GRID DE CARDS */
     .projects-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -244,7 +299,6 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
 
     .card { background: ${t.card}; padding: 24px; border-radius: 12px; border: 1px solid ${t.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; }
     
-    /* IMAGEN ADAPTATIVA (SIN RECORTES FORZADOS) */
     .proj-img-container {
       width: 100%;
       background: #000;
@@ -268,7 +322,6 @@ function downloadHTML(name, title, about, skills, themeKey, projects) {
     .card h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; color: ${t.text}; }
     .proj-desc { color: ${t.muted}; font-size: 0.95rem; white-space: pre-line; margin-bottom: 16px; flex-grow: 1; }
     
-    /* BOTÓN ESTILIZADO PARA EL ENLACE */
     .proj-link-btn {
       display: inline-block;
       background-color: ${t.primary};
