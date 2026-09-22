@@ -3,7 +3,7 @@
   "name": "Generador de Portafolio Profesional",
   "icons": [
     {
-      "src": "icono.valija}.jpg",
+      "src": "icono.valija.jpg",
       "type": "image/jpeg",
       "sizes": "192x192 512x512",
       "purpose": "any maskable"
